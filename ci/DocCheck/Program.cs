@@ -19,7 +19,7 @@ namespace CsStyle.DocCheck
     {
         private static readonly HashSet<string> ExcludedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            ".git", "ci", "Library", "Temp", "Logs", "UserSettings", "obj", "bin",
+            ".git", "ci", "Library", "Temp", "Logs", "UserSettings", "obj", "bin", "Tests",
         };
 
         // "Feature is not available in C# N" errors (one ID per language version) and "feature is in preview".
