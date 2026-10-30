@@ -85,12 +85,6 @@ dotnet_style_qualification_for_property = false:warning
 dotnet_style_qualification_for_method = false:warning
 dotnet_style_qualification_for_event = false:warning
 
-# var: only when the type is apparent. Built-in types (int, string, ...) always use the keyword.
-# Severity must be warning: dotnet format ignores suggestion-level rules, so CI would never report them.
-csharp_style_var_for_built_in_types = false:warning
-csharp_style_var_when_type_is_apparent = true:warning
-csharp_style_var_elsewhere = false:warning
-
 # Documentation: public and protected members need /// comments.
 # Requires GenerateDocumentationFile (set in Directory.Build.props).
 dotnet_diagnostic.CS1591.severity = warning
@@ -98,9 +92,10 @@ dotnet_diagnostic.CS1591.severity = warning
 # Rider: it reads the rules above, but its own inspections for some of them default to hint, which is easy
 # to miss. These raise them to warning so Rider flags the same things CI does. Other tools ignore these keys.
 resharper_arrange_this_qualifier_highlighting = warning
-resharper_suggest_var_or_type_built_in_types_highlighting = warning
-resharper_suggest_var_or_type_simple_types_highlighting = warning
-resharper_suggest_var_or_type_elsewhere_highlighting = warning
+# var or an explicit type is the author's choice, so Rider's own suggestions are off.
+resharper_suggest_var_or_type_built_in_types_highlighting = none
+resharper_suggest_var_or_type_simple_types_highlighting = none
+resharper_suggest_var_or_type_elsewhere_highlighting = none
 resharper_arrange_namespace_body_highlighting = warning
 resharper_inconsistent_naming_highlighting = warning
 resharper_c_sharp_warnings_cs1591_highlighting = warning
