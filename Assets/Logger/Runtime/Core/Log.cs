@@ -9,8 +9,6 @@ namespace RadTadDev.Logger
     /// </summary>
     public static class Log
     {
-        static Log() => AddSink(new ConsoleSink());
-
         /// <summary>
         /// The minimum level of message to log.
         /// </summary>
