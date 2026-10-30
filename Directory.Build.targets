@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Unity's generated .csproj files are old-style projects. They skip Directory.Build.props but still import
+    this file, so this is where Rider and VS Code learn to report missing XML docs (CS1591) in Unity code.
+    Only the IDE reads these projects: Unity compiles scripts itself, so builds and the Console are unaffected.
+    SDK-style projects already get docs from GenerateDocumentationFile in Directory.Build.props.
+  -->
+  <PropertyGroup Condition="'$(UsingMicrosoftNETSdk)' != 'true' And '$(DocumentationFile)' == ''">
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+</Project>

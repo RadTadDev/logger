@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    CI-only project. It lets dotnet format and the compiler see every .cs file in the repo,
+    including Unity's Assets/ and Packages/ folders, without needing Unity's generated .csproj files.
+    Nothing is shipped from here. Unity references are not included, so compile errors about
+    UnityEngine types are expected. Formatting and documentation warnings still come through.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsPackable>false</IsPackable>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../**/*.cs"
+             Exclude="../../ci/**;../../Library/**;../../Temp/**;../../obj/**;../../bin/**;../../**/obj/**;../../**/bin/**" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+{
+    "name": "RadTadDev.Logger",
+    "rootNamespace": "RadTadDev.Logger",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

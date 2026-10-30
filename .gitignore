@@ -1,0 +1,58 @@
+# Unity generated
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Samples imported into this dev project from the package's Samples~ folder
+/[Aa]ssets/[Ss]amples/
+/[Aa]ssets/[Ss]amples.meta
+
+# Build output from the cs-style CI tools in ci/
+bin/
+obj/
+
+# IDEs (extensions.json comes from cs-style)
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.consulo/
+/[Aa]ssets/Plugins/Editor/JetBrains*
+*.csproj
+!/ci/**/*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Builds / misc
+*.tmp
+*.apk
+*.aab
+*.app
+*.unitypackage
+*.unitypackage.meta
+ExportedObj/
+sysinfo.txt
+mono_crash.*
+crashlytics-build.properties
+.DS_Store
+Thumbs.db

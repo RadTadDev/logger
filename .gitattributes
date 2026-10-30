@@ -1,0 +1,2 @@
+# Keep LF in the repo on every machine, including Windows checkouts.
+* text=auto eol=lf

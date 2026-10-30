@@ -1,0 +1,23 @@
+{
+  "name": "com.radtaddev.logger",
+  "version": "0.1.0",
+  "displayName": "Logger",
+  "description": "",
+  "unity": "6000.4",
+  "author": {
+    "name": "Tad DiDio",
+    "url": "https://github.com/RadTadDev"
+  },
+  "documentationUrl": "https://github.com/RadTadDev/logger#readme",
+  "changelogUrl": "https://github.com/RadTadDev/logger/blob/main/Assets/Logger/CHANGELOG.md",
+  "licensesUrl": "https://github.com/RadTadDev/logger/blob/main/Assets/Logger/LICENSE.md",
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "Example",
+      "description": "Minimal usage example.",
+      "path": "Samples~/Example"
+    }
+  ],
+  "license": "MIT"
+}

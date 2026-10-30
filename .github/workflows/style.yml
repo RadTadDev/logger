@@ -1,0 +1,107 @@
+name: Style check
+
+# Reports style violations as annotations on the run and in the job summary.
+# The job fails when any check has findings, so problems show as a red X on the PR.
+# It only blocks a merge if it is made a required check in branch protection, which it is not.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  style:
+    name: Style check (non-blocking)
+    runs-on: ubuntu-latest
+    env:
+      # Silences git's "Using 'master' as the name for the initial branch" hint during checkout.
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: init.defaultBranch
+      GIT_CONFIG_VALUE_0: main
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    defaults:
+      run:
+        # Named bash adds -o pipefail, so `tool | tee log` keeps the tool's exit code instead of tee's.
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # setup-dotnet's compiler problem matcher would annotate dotnet format findings a second time.
+      # ci/annotate.sh annotates every check the same way.
+      - name: Remove setup-dotnet problem matcher
+        run: echo "::remove-matcher owner=csc::"
+
+      # Each check annotates its own findings: GitHub shows at most 10 annotations of each severity per step.
+      # The job summary always has the full list. continue-on-error lets every check run; Summarize fails the job.
+      - name: Whitespace (dotnet format whitespace)
+        id: whitespace
+        continue-on-error: true
+        run: |
+          dotnet format whitespace ci/StyleCheck/StyleCheck.csproj --verify-no-changes 2>&1 | tee whitespace.log || status=$?
+          bash ci/annotate.sh whitespace.log
+          exit ${status:-0}
+
+      - name: Style and naming (dotnet format style)
+        id: style
+        continue-on-error: true
+        run: |
+          dotnet format style ci/StyleCheck/StyleCheck.csproj --verify-no-changes 2>&1 | tee style.log || status=$?
+          bash ci/annotate.sh style.log
+          exit ${status:-0}
+
+      - name: Documentation and language version (DocCheck)
+        id: docs
+        continue-on-error: true
+        run: |
+          dotnet build ci/DocCheck/DocCheck.csproj --nologo --verbosity quiet -p:UseSharedCompilation=false
+          dotnet run --project ci/DocCheck/DocCheck.csproj --no-build -- . 2>&1 | tee docs.log || status=$?
+          bash ci/annotate.sh docs.log
+          exit ${status:-0}
+
+      - name: Summarize
+        if: always()
+        run: |
+          summarize() {
+            local title="$1" outcome="$2" log="$3"
+            local count
+            count=$(grep -cE '\): (error|warning) ' "$log" 2>/dev/null || true)
+            if [ "$outcome" = "success" ]; then
+              echo "- **$title**: clean"
+            else
+              echo "- **$title**: ${count:-0} findings"
+              echo
+              echo "<details><summary>$title output</summary>"
+              echo
+              echo '```'
+              sed -E "s#^${GITHUB_WORKSPACE}/##; s# \[[^]]*\]\$##" "$log" | head -n 300 || true
+              echo '```'
+              echo "</details>"
+              echo
+            fi
+          }
+
+          {
+            echo "## Style check results"
+            echo
+            summarize "Whitespace" "${{ steps.whitespace.outcome }}" whitespace.log
+            summarize "Style and naming" "${{ steps.style.outcome }}" style.log
+            summarize "Documentation and language version" "${{ steps.docs.outcome }}" docs.log
+            echo
+            echo "This check is not required, so it does not block merging. See the README for the commands that fix whitespace and style locally."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for outcome in "${{ steps.whitespace.outcome }}" "${{ steps.style.outcome }}" "${{ steps.docs.outcome }}"; do
+            if [ "$outcome" != "success" ]; then
+              echo "::error title=Style check::Style findings were reported. See the job summary for the full list."
+              exit 1
+            fi
+          done

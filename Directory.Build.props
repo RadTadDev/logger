@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Shared compiler settings for SDK-style C# projects under this repo, including the CI projects.
+    Unity's generated .csproj files skip this file (see Directory.Build.targets), and Unity sets their LangVersion itself.
+    Change the language version here when moving to a newer Unity (Unity 7 supports C# 14) so CI checks the same version.
+  -->
+  <PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

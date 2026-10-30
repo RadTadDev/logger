@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    CI-only tool. Reports missing XML docs (same rule as compiler warning CS1591) and syntax the configured
+    C# version does not support. It only parses files, so it works on Unity code without UnityEngine references.
+    LangVersion comes from the root Directory.Build.props and is embedded so the tool checks against the same version.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 4.8.0 understands up to C# 12. Raise it alongside LangVersion when targeting a newer C# (e.g. C# 14 for Unity 7). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>TargetLangVersion</_Parameter1>
+      <_Parameter2>$(LangVersion)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

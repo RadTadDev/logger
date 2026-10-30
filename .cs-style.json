@@ -1,0 +1,17 @@
+{
+  "source": "https://github.com/RadTadDev/cs-style.git",
+  "ref": null,
+  "commit": "32867b09a26baa6c367571c053781bdf50c6977d",
+  "files": [
+    ".editorconfig",
+    ".gitattributes",
+    ".github/workflows/style.yml",
+    ".vscode/extensions.json",
+    "Directory.Build.props",
+    "Directory.Build.targets",
+    "ci/DocCheck/DocCheck.csproj",
+    "ci/DocCheck/Program.cs",
+    "ci/StyleCheck/StyleCheck.csproj",
+    "ci/annotate.sh"
+  ]
+}
