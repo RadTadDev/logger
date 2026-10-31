@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 
 namespace RadTadDev.Logger
@@ -9,6 +10,11 @@ namespace RadTadDev.Logger
     {
         private bool _closed;
         private readonly object _lock = new();
+
+        /// <summary>
+        /// Whether this sink has been closed. Closed sinks never reopen.
+        /// </summary>
+        internal bool IsClosed => Volatile.Read(ref _closed);
 
         /// <inheritdoc/>
         [HideInCallstack]

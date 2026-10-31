@@ -10,7 +10,7 @@ namespace RadTadDev.Logger
     /// </summary>
     internal static class SinkManager
     {
-        private static ISink[] _sinks = Array.Empty<ISink>();
+        private static ISink[] _sinks = { new ConsoleSink() };
         private static readonly object Lock = new();
 
         /// <summary>
@@ -19,6 +19,17 @@ namespace RadTadDev.Logger
         /// <param name="sink">The sink.</param>
         public static void AddSink(ISink sink)
         {
+            if (sink == null)
+            {
+                throw new ArgumentNullException(nameof(sink));
+            }
+
+            // Checked outside Lock: a sink can hold its own lock while calling back into the logger.
+            if (sink is ThreadSafeSink { IsClosed: true })
+            {
+                throw new InvalidOperationException($"Cannot add a closed {sink.GetType().Name}.");
+            }
+
             lock (Lock)
             {
                 if (_sinks.Any(s => s == sink))
@@ -115,12 +126,21 @@ namespace RadTadDev.Logger
             lock (Lock)
             {
                 old = _sinks;
-                Volatile.Write(ref _sinks, Array.Empty<ISink>());
+
+                // Replaced rather than emptied: nothing reruns to restore it with domain reload off.
+                Volatile.Write(ref _sinks, new ISink[] { new ConsoleSink() });
             }
 
             foreach (var sink in old)
             {
-                sink.Close();
+                try
+                {
+                    sink.Close();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
         }
     }

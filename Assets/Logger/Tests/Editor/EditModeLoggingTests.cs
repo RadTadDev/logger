@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -32,7 +31,6 @@ namespace RadTadDev.Logger.Editor.Tests
         /// Editor scripts can log from the main thread (audit #2).
         /// </summary>
         [Test]
-        [Category("KnownBug")]
         public void MainThreadLog_ReachesConsole()
         {
             LogAssert.Expect(LogType.Log, new Regex("edit mode main"));
@@ -41,21 +39,17 @@ namespace RadTadDev.Logger.Editor.Tests
         }
 
         /// <summary>
-        /// Editor scripts can log from worker threads (audit #2).
+        /// Editor scripts can log from worker threads (audit #2). The test runner does not pump the
+        /// synchronization context mid-test, so a main thread log does the flushing here.
         /// </summary>
-        /// <returns>The test coroutine.</returns>
-        [UnityTest]
-        [Category("KnownBug")]
-        public IEnumerator WorkerLog_ReachesConsole()
+        [Test]
+        public void WorkerLog_ReachesConsole()
         {
             LogAssert.Expect(LogType.Log, new Regex("edit mode worker"));
+            LogAssert.Expect(LogType.Log, new Regex("edit mode flush"));
 
-            Task task = Task.Run(() => Log.Info("edit mode worker"));
-
-            for (int i = 0; i < 10 || !task.IsCompleted; i++)
-            {
-                yield return null;
-            }
+            Task.Run(() => Log.Info("edit mode worker")).Wait();
+            Log.Info("edit mode flush");
         }
 
         /// <summary>

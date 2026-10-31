@@ -180,6 +180,24 @@ namespace RadTadDev.Logger.Tests
         private int _attempts;
 
         /// <summary>
+        /// Creates a sink. Limits default to off so tests only meet them on purpose.
+        /// </summary>
+        /// <param name="drainPerFrameLimit">Maximum logs delivered per frame.</param>
+        /// <param name="queueLimit">Maximum logs queued.</param>
+        public RecordingUnitySink(int drainPerFrameLimit = int.MaxValue, int queueLimit = int.MaxValue)
+            : base(drainPerFrameLimit, queueLimit) { }
+
+        /// <summary>
+        /// How many times <see cref="OnSinkClosed"/> ran.
+        /// </summary>
+        public int SinkClosedCount { get; private set; }
+
+        /// <summary>
+        /// The id of the thread <see cref="OnSinkClosed"/> ran on.
+        /// </summary>
+        public int CleanupThreadId { get; private set; }
+
+        /// <summary>
         /// Messages received, in order.
         /// </summary>
         public List<string> Messages { get; } = new();
@@ -211,6 +229,13 @@ namespace RadTadDev.Logger.Tests
 
             Messages.Add(message);
             AfterWrite?.Invoke(message);
+        }
+
+        /// <inheritdoc/>
+        protected override void OnSinkClosed()
+        {
+            SinkClosedCount++;
+            CleanupThreadId = Thread.CurrentThread.ManagedThreadId;
         }
     }
 
@@ -263,12 +288,6 @@ namespace RadTadDev.Logger.Tests
     /// </summary>
     public abstract class LoggerFixture
     {
-        /// <summary>
-        /// Marks a test that asserts correct behavior the logger does not have yet. These are expected
-        /// to fail until the bug is fixed.
-        /// </summary>
-        protected const string KnownBug = "KnownBug";
-
         private static readonly TimeSpan ThreadTimeout = TimeSpan.FromSeconds(30);
 
         private readonly List<ISink> _added = new();

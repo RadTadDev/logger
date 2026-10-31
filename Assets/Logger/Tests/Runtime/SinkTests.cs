@@ -52,25 +52,14 @@ namespace RadTadDev.Logger.Tests
         }
 
         /// <summary>
-        /// A null sink is refused, either loudly or by ignoring it, rather than failing every later log
-        /// (audit #9).
+        /// A null sink is refused rather than failing every later log (audit #9).
         /// </summary>
         [Test]
-        [Category(KnownBug)]
-        public void AddSink_Null_DoesNotBreakLaterLogging()
+        public void AddSink_Null_Throws()
         {
             RecordingSink sink = Add(new RecordingSink());
 
-            try
-            {
-                Log.AddSink(null);
-            }
-            catch (ArgumentNullException)
-            {
-                // Refusing loudly is fine.
-            }
-
-            Log.Info("m");
+            Assert.Throws<ArgumentNullException>(() => Log.AddSink(null));
 
             Assert.That(Internals.Sinks, Is.EqualTo(new[] { sink }));
         }
@@ -143,27 +132,17 @@ namespace RadTadDev.Logger.Tests
         }
 
         /// <summary>
-        /// Re-adding a removed sink either works or is refused loudly, never silently dead (audit #10).
+        /// Re-adding a closed sink is refused loudly, never silently dead (audit #10).
         /// </summary>
         [Test]
-        [Category(KnownBug)]
-        public void AddSink_AfterRemove_WorksOrRefuses()
+        public void AddSink_AfterRemove_Throws()
         {
             RecordingSink sink = Add(new RecordingSink());
             Log.RemoveSink(sink);
 
-            try
-            {
-                Log.AddSink(sink);
-            }
-            catch (InvalidOperationException)
-            {
-                Assert.Pass("Refused loudly.");
-            }
+            Assert.Throws<InvalidOperationException>(() => Log.AddSink(sink));
 
-            Log.Info("m");
-
-            Assert.That(sink.Messages, Has.Count.EqualTo(1));
+            Assert.That(Internals.Sinks, Is.Empty);
         }
 
         /// <summary>

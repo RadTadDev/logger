@@ -242,7 +242,6 @@ namespace RadTadDev.Logger.Tests
         /// The private frame between the public API and the sinks is hidden too (audit: low).
         /// </summary>
         [Test]
-        [Category(KnownBug)]
         public void PrivateDispatch_HidesInCallstack()
         {
             MethodInfo info = typeof(Log).GetMethod("Dispatch", BindingFlags.NonPublic | BindingFlags.Static);

@@ -92,6 +92,8 @@ namespace RadTadDev.Logger
         /// Adds a sink to send every message to.
         /// </summary>
         /// <param name="sink">The sink to add.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="sink"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="sink"/> was closed, which cannot be undone.</exception>
         public static void AddSink(ISink sink) => SinkManager.AddSink(sink);
 
         /// <summary>
@@ -104,11 +106,25 @@ namespace RadTadDev.Logger
         /// </remarks>
         public static void RemoveSink(ISink sink) => SinkManager.RemoveSink(sink);
 
+        [HideInCallstack]
         private static void Dispatch(object message, string filePath, LogLevel level)
         {
             if (level >= MinimumLevel)
             {
-                SinkManager.Dispatch($"[{level}] [{GetFileName(filePath)}]: {message}", level);
+                SinkManager.Dispatch($"[{level}] [{GetFileName(filePath)}]: {Format(message)}", level);
+            }
+        }
+
+        private static string Format(object message)
+        {
+            try
+            {
+                return $"{message}";
+            }
+            catch (Exception e)
+            {
+                // Logging must never throw into the caller, e.g. Unity objects off the main thread.
+                return $"<{message.GetType().Name}.ToString threw {e.GetType().Name}: {e.Message}>";
             }
         }
 

@@ -21,10 +21,10 @@ namespace RadTadDev.Logger.Tests
         }
 
         /// <summary>
-        /// Teardown closes every sink and clears the list.
+        /// Teardown closes every sink and leaves only a fresh default, so logging keeps working.
         /// </summary>
         [Test]
-        public void Reset_ClosesAndRemovesAllSinks()
+        public void Reset_ClosesAllSinksAndRestoresDefault()
         {
             RecordingSink first = Add(new RecordingSink());
             RecordingSink second = Add(new RecordingSink());
@@ -33,7 +33,8 @@ namespace RadTadDev.Logger.Tests
 
             Assert.That(first.CloseCount, Is.EqualTo(1));
             Assert.That(second.CloseCount, Is.EqualTo(1));
-            Assert.That(Internals.Sinks, Is.Empty);
+            Assert.That(Internals.Sinks, Has.Length.EqualTo(1));
+            Assert.That(Internals.Sinks[0], Is.InstanceOf<ConsoleSink>());
         }
 
         /// <summary>
@@ -54,7 +55,6 @@ namespace RadTadDev.Logger.Tests
         /// One sink failing to close does not leave the others open (audit #6).
         /// </summary>
         [Test]
-        [Category(KnownBug)]
         public void Reset_ThrowingClose_StillClosesLaterSinks()
         {
             LogAssert.ignoreFailingMessages = true;
@@ -74,10 +74,21 @@ namespace RadTadDev.Logger.Tests
         }
 
         /// <summary>
+        /// A close failure is reported, not hidden.
+        /// </summary>
+        [Test]
+        public void Reset_ThrowingClose_IsReported()
+        {
+            Add(new ThrowingSink { ThrowOnClose = true });
+            LogAssert.Expect(LogType.Exception, new Regex("close failure"));
+
+            Assert.DoesNotThrow(Internals.Reset);
+        }
+
+        /// <summary>
         /// Logging survives quit then re-enter, which is what domain reload off does (audit #1).
         /// </summary>
         [Test]
-        [Category(KnownBug)]
         public void SecondPlaySession_WithoutDomainReload_StillLogsToConsole()
         {
             Add(new ConsoleSink());
@@ -93,7 +104,6 @@ namespace RadTadDev.Logger.Tests
         /// Logging before play starts, such as from [InitializeOnLoad], cannot kill the session (audit #3).
         /// </summary>
         [Test]
-        [Category(KnownBug)]
         public void LogBeforeSubsystemRegistration_DoesNotKillSession()
         {
             Add(new ConsoleSink());
@@ -121,7 +131,6 @@ namespace RadTadDev.Logger.Tests
         /// A throwing ToString never reaches the code that was only trying to log (audit #5).
         /// </summary>
         [Test]
-        [Category(KnownBug)]
         public void Log_ThrowingToString_DoesNotReachCaller()
         {
             LogAssert.ignoreFailingMessages = true;
@@ -131,10 +140,23 @@ namespace RadTadDev.Logger.Tests
         }
 
         /// <summary>
+        /// A failed ToString still logs a line that says what went wrong.
+        /// </summary>
+        [Test]
+        public void Log_ThrowingToString_LogsFallback()
+        {
+            RecordingSink sink = Add(new RecordingSink());
+
+            Log.Warn(new ThrowingToString());
+
+            Assert.That(sink.Messages, Has.Count.EqualTo(1));
+            Assert.That(sink.Messages[0], Does.Contain(nameof(ThrowingToString)).And.Contain("ToString failure"));
+        }
+
+        /// <summary>
         /// Logging a Unity object from a worker never reaches the caller as an exception (audit #5).
         /// </summary>
         [Test]
-        [Category(KnownBug)]
         public void Log_UnityObjectFromWorker_DoesNotReachCaller()
         {
             LogAssert.ignoreFailingMessages = true;
