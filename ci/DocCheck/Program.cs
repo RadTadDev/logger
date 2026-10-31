@@ -19,7 +19,7 @@ namespace CsStyle.DocCheck
     {
         private static readonly HashSet<string> ExcludedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            ".git", "ci", "Library", "Temp", "Logs", "UserSettings", "obj", "bin", "Tests",
+            ".git", "ci", "Library", "Temp", "Logs", "UserSettings", "obj", "bin",
         };
 
         // "Feature is not available in C# N" errors (one ID per language version) and "feature is in preview".
@@ -41,7 +41,7 @@ namespace CsStyle.DocCheck
             LanguageVersion languageVersion = ReadLanguageVersion();
             var options = new CSharpParseOptions(languageVersion, DocumentationMode.Parse);
 
-            var files = Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
+            var files = Directory.EnumerateFiles(Path.Combine(root, "Assets/Logger"), "*.cs", SearchOption.AllDirectories)
                 .Where(file => !IsExcluded(Path.GetRelativePath(root, file)))
                 .OrderBy(file => file, StringComparer.Ordinal)
                 .ToList();

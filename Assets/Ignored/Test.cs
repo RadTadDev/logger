@@ -6,9 +6,6 @@ using UnityEngine.InputSystem;
 
 namespace Ignored
 {
-    /// <summary>
-    /// Smoke test.
-    /// </summary>
     public class Test : MonoBehaviour
     {
         private void Awake()
@@ -28,7 +25,7 @@ namespace Ignored
 
         private void Update()
         {
-            Keyboard kb = Keyboard.current;
+            var kb = Keyboard.current;
             if (kb == null)
             {
                 return; // no keyboard connected

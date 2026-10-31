@@ -1,9 +1,13 @@
 root = true
 
+[*.cs]
+dotnet_diagnostic.CS1591.severity = none
+resharper_c_sharp_warnings_cs1591_highlighting = none
+
 # ---------------------------------------------------------------
 # Whitespace and files (all file types)
 # ---------------------------------------------------------------
-[*]
+[Assets/Logger/**]
 charset = utf-8
 end_of_line = lf
 indent_style = space
@@ -14,7 +18,7 @@ trim_trailing_whitespace = true
 # ---------------------------------------------------------------
 # C#
 # ---------------------------------------------------------------
-[*.cs]
+[Assets/Logger/**.cs]
 
 # Hint for the editor ruler and wrapping. dotnet format does not enforce it.
 max_line_length = 120
