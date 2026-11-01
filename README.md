@@ -1,5 +1,8 @@
 # Logger
 
+A basic, practical, thread safe logger for Unity. Log from any thread with no setup, and send
+messages to the console or your own sinks.
+
 ## Installation
 
 In Unity, open **Window > Package Manager**, click **+ > Add package from git URL...** and enter:
@@ -8,50 +11,38 @@ In Unity, open **Window > Package Manager**, click **+ > Add package from git UR
 https://github.com/RadTadDev/logger.git?path=/Assets/Logger
 ```
 
-To pin a release, append a tag: `https://github.com/RadTadDev/logger.git?path=/Assets/Logger#v0.1.0`
+To pin a release, append a tag such as `#v1.0.0`. Requires Unity 6000.4 or newer.
 
-Or add it to `Packages/manifest.json` directly:
+## Usage
 
-```json
-{
-  "dependencies": {
-    "com.radtaddev.logger": "https://github.com/RadTadDev/logger.git?path=/Assets/Logger#v0.1.0"
-  }
-}
+```csharp
+using RadTadDev.Logger;
+
+Log.Info("Player joined");
+Log.Warn("Low memory");
+Log.Error("Save failed");
+Log.Exception(exception);
+
+Log.MinimumLevel = LogLevel.Warn;
+Log.AddSink(new MySink());
 ```
 
-Requires Unity 6000.4 or newer.
+Derive from `ThreadSafeSink` for your own destination, or `UnitySafeSink` if it needs the Unity API.
+See the [documentation](Assets/Logger/Documentation~/logger.md) for filtering, sinks, limits and
+lifetime.
 
 ## Development
 
-This repository is a Unity project. The package itself lives in
-[`Assets/Logger`](Assets/Logger) and that folder is the only part consumers install.
+This repository is a Unity project and the package lives in [`Assets/Logger`](Assets/Logger). Open it
+in Unity 6000.4.6f1 and run tests from **Window > General > Test Runner**.
 
-1. Open the repository root in Unity 6000.4.6f1 (Unity Hub > Add > Add project from disk).
-2. Commit the `Packages/` and `ProjectSettings/` folders Unity generates on first open.
-3. Run tests from **Window > General > Test Runner**.
-
-Samples live in `Assets/Logger/Samples~` (hidden from Unity). To work on them, import them
-through the Package Manager or edit them outside the editor.
-
-## Code style
-
-C# style rules come from [cs-style](https://github.com/RadTadDev/cs-style): `.editorconfig`,
-`Directory.Build.props`, the `ci/` tools and `.github/workflows/style.yml`. Every push and pull
-request runs a non-blocking style check that reports findings as warnings. To pull the latest
-rules, run `upkg style` from the repository and commit the result. Edits to those files are
-overwritten on the next update.
-
-To check locally (needs the .NET SDK):
+Check style locally with the .NET SDK:
 
 ```
 dotnet format whitespace ci/StyleCheck/StyleCheck.csproj --verify-no-changes
 dotnet format style ci/StyleCheck/StyleCheck.csproj --verify-no-changes
 dotnet run --project ci/DocCheck/DocCheck.csproj -- .
 ```
-
-Drop `--verify-no-changes` to apply fixes (run `style` before `whitespace`). Naming and missing
-docs are not auto-fixed.
 
 ## Releasing
 

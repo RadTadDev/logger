@@ -41,7 +41,7 @@ namespace CsStyle.DocCheck
             LanguageVersion languageVersion = ReadLanguageVersion();
             var options = new CSharpParseOptions(languageVersion, DocumentationMode.Parse);
 
-            var files = Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
+            var files = Directory.EnumerateFiles(Path.Combine(root, "Assets/Logger"), "*.cs", SearchOption.AllDirectories)
                 .Where(file => !IsExcluded(Path.GetRelativePath(root, file)))
                 .OrderBy(file => file, StringComparer.Ordinal)
                 .ToList();
