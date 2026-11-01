@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using UnityEditor;
 using UnityEngine;
 
 namespace RadTadDev.Logger
@@ -22,29 +23,8 @@ namespace RadTadDev.Logger
         /// </summary>
         protected const int DefaultQueueLimit = 10000;
 
-        private readonly struct Entry
-        {
-            /// <summary>
-            /// The message to log.
-            /// </summary>
-            public readonly string Message;
-
-            /// <summary>
-            /// The level to log the message at.
-            /// </summary>
-            public readonly LogLevel Level;
-
-            /// <summary>
-            /// Creates a new entry.
-            /// </summary>
-            /// <param name="message">The message to log.</param>
-            /// <param name="level">The level to log at.</param>
-            public Entry(string message, LogLevel level)
-            {
-                Message = message;
-                Level = level;
-            }
-        }
+        private const int EmptyDrain = 0;
+        private const int PendingDrain = 1;
 
         private static SynchronizationContext _mainContext;
         private static int _mainThreadId = -1;
@@ -54,25 +34,20 @@ namespace RadTadDev.Logger
         private static readonly SendOrPostCallback CloseCallback = state => ((UnitySafeSink)state).FinishClose();
 
         private readonly int _drainPerFrameLimit;
+        private readonly object _pumpLock = new();
+
+        private readonly ConcurrentQueue<Entry> _queue = new();
         private readonly int _queueLimit;
-
-        private const int EmptyDrain = 0;
-        private const int PendingDrain = 1;
-
-        private int _drainScheduled;
+        private bool _closed;
 
         // Main thread only. Spent by every drain, refilled once per frame by the posted drain.
         private int _drainBudget;
-        private bool _throttled;
 
-        private int _queued;
+        private int _drainScheduled;
         private int _dropped;
 
-        private readonly ConcurrentQueue<Entry> _queue = new();
-        private readonly object _pumpLock = new();
-        private bool _closed;
-
-        private static bool OnMainThread => Thread.CurrentThread.ManagedThreadId == _mainThreadId;
+        private int _queued;
+        private bool _throttled;
 
         /// <summary>
         /// Creates a new Unity log sink.
@@ -96,6 +71,8 @@ namespace RadTadDev.Logger
             _drainBudget = drainPerFrameLimit;
         }
 
+        private static bool OnMainThread => Thread.CurrentThread.ManagedThreadId == _mainThreadId;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void CaptureMainThread()
         {
@@ -105,26 +82,10 @@ namespace RadTadDev.Logger
 
         // Worker logs never drain without a context, so capture again once startup is further along.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RecaptureMainThread() => CaptureMainThread();
-
-#if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void CaptureMainThreadInEditor()
+        private static void RecaptureMainThread()
         {
             CaptureMainThread();
-
-            UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeChanged;
-            UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeChanged;
         }
-
-        private static void OnPlayModeChanged(UnityEditor.PlayModeStateChange state)
-        {
-            if (state == UnityEditor.PlayModeStateChange.EnteredEditMode)
-            {
-                CaptureMainThread();
-            }
-        }
-#endif
 
         /// <summary>
         /// Called on the main thread to log a message, so Unity state is safe to use here.
@@ -133,7 +94,7 @@ namespace RadTadDev.Logger
         /// <param name="level">The level to log at.</param>
         protected abstract void WriteOnMainThread(string message, LogLevel level);
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         [HideInCallstack]
         protected sealed override void WriteSerial(string message, LogLevel level)
         {
@@ -167,7 +128,7 @@ namespace RadTadDev.Logger
             ScheduleDrain();
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         [HideInCallstack]
         protected sealed override void OnClosed()
         {
@@ -255,7 +216,8 @@ namespace RadTadDev.Logger
                 if (!_throttled)
                 {
                     _throttled = true;
-                    Debug.LogWarning($"{GetType().Name}: drain limit of {_drainPerFrameLimit} reached, deferring logs.");
+                    Debug.LogWarning(
+                        $"{GetType().Name}: drain limit of {_drainPerFrameLimit} reached, deferring logs.");
                 }
 
                 ScheduleDrain();
@@ -264,7 +226,7 @@ namespace RadTadDev.Logger
 
             _throttled = false;
 
-            int dropped = Interlocked.Exchange(ref _dropped, 0);
+            var dropped = Interlocked.Exchange(ref _dropped, 0);
             if (dropped > 0)
             {
                 Debug.LogWarning($"{GetType().Name}: dropped {dropped} logs while the queue was full.");
@@ -295,5 +257,48 @@ namespace RadTadDev.Logger
                 WriteOnMainThread(entry.Message, entry.Level);
             }
         }
+
+        private readonly struct Entry
+        {
+            /// <summary>
+            /// The message to log.
+            /// </summary>
+            public readonly string Message;
+
+            /// <summary>
+            /// The level to log the message at.
+            /// </summary>
+            public readonly LogLevel Level;
+
+            /// <summary>
+            /// Creates a new entry.
+            /// </summary>
+            /// <param name="message">The message to log.</param>
+            /// <param name="level">The level to log at.</param>
+            public Entry(string message, LogLevel level)
+            {
+                Message = message;
+                Level = level;
+            }
+        }
+
+#if UNITY_EDITOR
+        [InitializeOnLoadMethod]
+        private static void CaptureMainThreadInEditor()
+        {
+            CaptureMainThread();
+
+            EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeChanged;
+        }
+
+        private static void OnPlayModeChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                CaptureMainThread();
+            }
+        }
+#endif
     }
 }

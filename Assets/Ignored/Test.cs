@@ -26,18 +26,15 @@ namespace Ignored
         private void Update()
         {
             var kb = Keyboard.current;
-            if (kb == null)
-            {
-                return; // no keyboard connected
-            }
+            if (kb == null) return; // no keyboard connected
 
             // 1-5: one key per public API
-            if (kb.digit1Key.wasPressedThisFrame) { Log.Trace("Info trace"); }
-            if (kb.digit1Key.wasPressedThisFrame) { Log.Info("Info test"); }
-            if (kb.digit2Key.wasPressedThisFrame) { Log.Warn("Warn test"); }
-            if (kb.digit3Key.wasPressedThisFrame) { Log.Error("Error test"); }
-            if (kb.digit4Key.wasPressedThisFrame) { Log.Exception(MakeThrownException()); }
-            if (kb.digit5Key.wasPressedThisFrame) { Log.Debug("Debug test"); }
+            if (kb.digit1Key.wasPressedThisFrame) Log.Trace("Info trace");
+            if (kb.digit1Key.wasPressedThisFrame) Log.Info("Info test");
+            if (kb.digit2Key.wasPressedThisFrame) Log.Warn("Warn test");
+            if (kb.digit3Key.wasPressedThisFrame) Log.Error("Error test");
+            if (kb.digit4Key.wasPressedThisFrame) Log.Exception(MakeThrownException());
+            if (kb.digit5Key.wasPressedThisFrame) Log.Debug("Debug test");
 
             // 6: cycle MinimumLevel, then fire one of each level to see what gets filtered
             if (kb.digit6Key.wasPressedThisFrame)
@@ -50,19 +47,16 @@ namespace Ignored
             }
 
             // 7: hammer Dispatch from many threads at once (thread-safety check)
-            if (kb.digit7Key.wasPressedThisFrame)
-            {
-                Parallel.For(0, 200, i => Log.Info($"Parallel message {i}"));
-            }
+            if (kb.digit7Key.wasPressedThisFrame) Parallel.For(0, 200, i => Log.Info($"Parallel message {i}"));
 
             // 8: Info with a non-string object, to check the object -> string path
-            if (kb.digit8Key.wasPressedThisFrame) { Log.Info(new Vector3(1, 2, 3)); }
+            if (kb.digit8Key.wasPressedThisFrame) Log.Info(new Vector3(1, 2, 3));
         }
 
         private static void CycleMinimumLevel()
         {
             var levels = (LogLevel[])Enum.GetValues(typeof(LogLevel));
-            int next = (Array.IndexOf(levels, Log.MinimumLevel) + 1) % levels.Length;
+            var next = (Array.IndexOf(levels, Log.MinimumLevel) + 1) % levels.Length;
             Log.MinimumLevel = levels[next];
             Log.Debug($"MinimumLevel is now {Log.MinimumLevel}");
         }

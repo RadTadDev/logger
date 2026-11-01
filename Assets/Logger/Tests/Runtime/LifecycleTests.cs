@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace RadTadDev.Logger.Tests
 {
@@ -26,8 +27,8 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Reset_ClosesAllSinksAndRestoresDefault()
         {
-            RecordingSink first = Add(new RecordingSink());
-            RecordingSink second = Add(new RecordingSink());
+            var first = Add(new RecordingSink());
+            var second = Add(new RecordingSink());
 
             Internals.Reset();
 
@@ -43,7 +44,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Reset_OnMainThread_FlushesQueuedMessages()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ => Log.Info("m"));
             Internals.Reset();
@@ -59,7 +60,7 @@ namespace RadTadDev.Logger.Tests
         {
             LogAssert.ignoreFailingMessages = true;
             Add(new ThrowingSink { ThrowOnClose = true });
-            RecordingSink after = Add(new RecordingSink());
+            var after = Add(new RecordingSink());
 
             try
             {
@@ -171,7 +172,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Log_ThrowingToString_LogsFallback()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.Warn(new ThrowingToString());
 
@@ -195,7 +196,7 @@ namespace RadTadDev.Logger.Tests
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(target);
+                Object.DestroyImmediate(target);
             }
         }
     }

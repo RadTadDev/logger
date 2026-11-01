@@ -16,7 +16,7 @@ namespace RadTadDev.Logger
         public ConsoleSink(int drainPerFrameLimit = DefaultDrainPerFrameLimit, int queueLimit = DefaultQueueLimit)
             : base(drainPerFrameLimit, queueLimit) { }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         [HideInCallstack]
         protected override void WriteOnMainThread(string message, LogLevel level)
         {

@@ -20,11 +20,11 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void ThreadSafeSink_SerializesWriters()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             RunThreads(Threads, _ =>
             {
-                for (int i = 0; i < PerThread; i++)
+                for (var i = 0; i < PerThread; i++)
                 {
                     Log.Info("m");
                 }
@@ -40,12 +40,12 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void UnitySafeSink_DeliversExactlyOnceInOrderPerThread()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
-            int mainMessages = 0;
+            var sink = Add(new RecordingUnitySink());
+            var mainMessages = 0;
 
             RunThreads(Threads, thread =>
             {
-                for (int i = 0; i < PerThread; i++)
+                for (var i = 0; i < PerThread; i++)
                 {
                     Log.Info($"{thread}:{i}");
                 }
@@ -59,16 +59,16 @@ namespace RadTadDev.Logger.Tests
 
             var next = new Dictionary<string, int>();
 
-            foreach (string message in sink.Messages)
+            foreach (var message in sink.Messages)
             {
-                string[] parts = message.Substring(message.LastIndexOf(' ') + 1).Split(':');
-                next.TryGetValue(parts[0], out int expected);
+                var parts = message.Substring(message.LastIndexOf(' ') + 1).Split(':');
+                next.TryGetValue(parts[0], out var expected);
 
                 Assert.That(int.Parse(parts[1]), Is.EqualTo(expected), $"Out of order on producer {parts[0]}.");
                 next[parts[0]] = expected + 1;
             }
 
-            Assert.That(sink.Messages, Has.Count.EqualTo((Threads * PerThread) + mainMessages));
+            Assert.That(sink.Messages, Has.Count.EqualTo(Threads * PerThread + mainMessages));
             Assert.That(sink.ThreadIds, Is.EqualTo(new[] { Thread.CurrentThread.ManagedThreadId }));
             Assert.That(MainLoop.Escaped, Is.Empty);
         }
@@ -79,11 +79,11 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void MultipleSinks_EachReceiveEverything()
         {
-            RecordingSink[] sinks = Enumerable.Range(0, 3).Select(_ => Add(new RecordingSink())).ToArray();
+            var sinks = Enumerable.Range(0, 3).Select(_ => Add(new RecordingSink())).ToArray();
 
             RunThreads(Threads, _ =>
             {
-                for (int i = 0; i < 500; i++)
+                for (var i = 0; i < 500; i++)
                 {
                     Log.Info("m");
                 }
@@ -98,9 +98,9 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void AddAndRemove_UnderLoad_IsSafe()
         {
-            RecordingSink stable = Add(new RecordingSink());
-            int stop = 0;
-            int logged = 0;
+            var stable = Add(new RecordingSink());
+            var stop = 0;
+            var logged = 0;
 
             RunThreads(8, thread =>
             {
@@ -117,7 +117,7 @@ namespace RadTadDev.Logger.Tests
 
                 try
                 {
-                    for (int i = 0; i < 2000; i++)
+                    for (var i = 0; i < 2000; i++)
                     {
                         var sink = new RecordingSink();
                         Log.AddSink(sink);
@@ -167,7 +167,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void RemoveSink_Racing_ClosesOnce()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             RunThreads(Threads, _ => Log.RemoveSink(sink));
 
@@ -181,7 +181,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Close_RacingWrites_NeverWritesAfterClose()
         {
-            for (int round = 0; round < 200; round++)
+            for (var round = 0; round < 200; round++)
             {
                 var sink = new RecordingSink();
 
@@ -193,7 +193,7 @@ namespace RadTadDev.Logger.Tests
                         return;
                     }
 
-                    for (int i = 0; i < 20; i++)
+                    for (var i = 0; i < 20; i++)
                     {
                         sink.Write("m", LogLevel.Info);
                     }
@@ -210,14 +210,14 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void UnitySafeSink_CloseRacingDrain_IsSafe()
         {
-            for (int round = 0; round < 100; round++)
+            for (var round = 0; round < 100; round++)
             {
                 var sink = new RecordingUnitySink();
                 Log.AddSink(sink);
 
                 RunThreads(3, thread =>
                 {
-                    for (int i = 0; i < 20; i++)
+                    for (var i = 0; i < 20; i++)
                     {
                         Log.Info("m");
                     }
@@ -245,7 +245,7 @@ namespace RadTadDev.Logger.Tests
 
             using var inDrain = new ManualResetEventSlim();
             using var closing = new ManualResetEventSlim();
-            bool first = true;
+            var first = true;
 
             sink.AfterWrite = _ =>
             {
@@ -285,11 +285,11 @@ namespace RadTadDev.Logger.Tests
         public void MinimumLevel_ChangingUnderLoad_IsSafe()
         {
             var levels = new[] { LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error };
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             RunThreads(Threads, thread =>
             {
-                for (int i = 0; i < 1000; i++)
+                for (var i = 0; i < 1000; i++)
                 {
                     if (thread == 0)
                     {

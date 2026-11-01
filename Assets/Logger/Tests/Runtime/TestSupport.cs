@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using NUnit.Framework;
 
@@ -53,12 +54,18 @@ namespace RadTadDev.Logger.Tests
         /// <summary>
         /// Runs the teardown that <c>Application.quitting</c> triggers.
         /// </summary>
-        public static void Reset() => Invoke(ResetMethod);
+        public static void Reset()
+        {
+            Invoke(ResetMethod);
+        }
 
         /// <summary>
         /// Runs the startup that entering play mode triggers.
         /// </summary>
-        public static void ResetOnPlay() => Invoke(ResetOnPlayMethod);
+        public static void ResetOnPlay()
+        {
+            Invoke(ResetOnPlayMethod);
+        }
 
         private static void Invoke(MethodInfo method)
         {
@@ -72,8 +79,10 @@ namespace RadTadDev.Logger.Tests
             }
         }
 
-        private static void ExceptionDispatchRethrow(Exception e) =>
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(e).Throw();
+        private static void ExceptionDispatchRethrow(Exception e)
+        {
+            ExceptionDispatchInfo.Capture(e).Throw();
+        }
     }
 
     /// <summary>
@@ -94,7 +103,7 @@ namespace RadTadDev.Logger.Tests
         /// </summary>
         public List<Exception> Escaped { get; } = new();
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override void Post(SendOrPostCallback d, object state)
         {
             Interlocked.Increment(ref _postCount);
@@ -106,7 +115,7 @@ namespace RadTadDev.Logger.Tests
         /// </summary>
         public void Pump()
         {
-            for (int remaining = _posted.Count; remaining > 0 && _posted.TryDequeue(out var item); remaining--)
+            for (var remaining = _posted.Count; remaining > 0 && _posted.TryDequeue(out var item); remaining--)
             {
                 try
                 {
@@ -121,7 +130,7 @@ namespace RadTadDev.Logger.Tests
     }
 
     /// <summary>
-    /// A <see cref="ThreadSafeSink"/> that records what it receives.
+    /// A <see cref="ThreadSafeSink" /> that records what it receives.
     /// </summary>
     internal sealed class RecordingSink : ThreadSafeSink
     {
@@ -139,21 +148,21 @@ namespace RadTadDev.Logger.Tests
         public List<LogLevel> Levels { get; } = new();
 
         /// <summary>
-        /// The most writers ever inside <see cref="WriteSerial"/> at once.
+        /// The most writers ever inside <see cref="WriteSerial" /> at once.
         /// </summary>
         public int MaxConcurrentWriters { get; private set; }
 
         /// <summary>
-        /// Writes that arrived after <see cref="OnClosed"/>.
+        /// Writes that arrived after <see cref="OnClosed" />.
         /// </summary>
         public int WritesAfterClose { get; private set; }
 
         /// <summary>
-        /// How many times <see cref="OnClosed"/> ran.
+        /// How many times <see cref="OnClosed" /> ran.
         /// </summary>
         public int CloseCount => Volatile.Read(ref _closeCount);
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void WriteSerial(string message, LogLevel level)
         {
             MaxConcurrentWriters = Math.Max(MaxConcurrentWriters, Interlocked.Increment(ref _active));
@@ -168,12 +177,15 @@ namespace RadTadDev.Logger.Tests
             Interlocked.Decrement(ref _active);
         }
 
-        /// <inheritdoc/>
-        protected override void OnClosed() => Interlocked.Increment(ref _closeCount);
+        /// <inheritdoc />
+        protected override void OnClosed()
+        {
+            Interlocked.Increment(ref _closeCount);
+        }
     }
 
     /// <summary>
-    /// A <see cref="UnitySafeSink"/> that records what it receives and where.
+    /// A <see cref="UnitySafeSink" /> that records what it receives and where.
     /// </summary>
     internal sealed class RecordingUnitySink : UnitySafeSink
     {
@@ -188,12 +200,12 @@ namespace RadTadDev.Logger.Tests
             : base(drainPerFrameLimit, queueLimit) { }
 
         /// <summary>
-        /// How many times <see cref="OnSinkClosed"/> ran.
+        /// How many times <see cref="OnSinkClosed" /> ran.
         /// </summary>
         public int SinkClosedCount { get; private set; }
 
         /// <summary>
-        /// The id of the thread <see cref="OnSinkClosed"/> ran on.
+        /// The id of the thread <see cref="OnSinkClosed" /> ran on.
         /// </summary>
         public int CleanupThreadId { get; private set; }
 
@@ -217,7 +229,7 @@ namespace RadTadDev.Logger.Tests
         /// </summary>
         public Action<string> AfterWrite { get; set; }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void WriteOnMainThread(string message, LogLevel level)
         {
             ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
@@ -231,7 +243,7 @@ namespace RadTadDev.Logger.Tests
             AfterWrite?.Invoke(message);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void OnSinkClosed()
         {
             SinkClosedCount++;
@@ -240,21 +252,21 @@ namespace RadTadDev.Logger.Tests
     }
 
     /// <summary>
-    /// An <see cref="ISink"/> that fails on demand.
+    /// An <see cref="ISink" /> that fails on demand.
     /// </summary>
     internal sealed class ThrowingSink : ISink
     {
         /// <summary>
-        /// Whether <see cref="Write"/> throws.
+        /// Whether <see cref="Write" /> throws.
         /// </summary>
         public bool ThrowOnWrite { get; set; }
 
         /// <summary>
-        /// Whether <see cref="Close"/> throws.
+        /// Whether <see cref="Close" /> throws.
         /// </summary>
         public bool ThrowOnClose { get; set; }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public void Write(string message, LogLevel level)
         {
             if (ThrowOnWrite)
@@ -263,7 +275,7 @@ namespace RadTadDev.Logger.Tests
             }
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public void Close()
         {
             if (ThrowOnClose)
@@ -274,12 +286,15 @@ namespace RadTadDev.Logger.Tests
     }
 
     /// <summary>
-    /// An object whose <see cref="ToString"/> throws.
+    /// An object whose <see cref="ToString" /> throws.
     /// </summary>
     internal sealed class ThrowingToString
     {
-        /// <inheritdoc/>
-        public override string ToString() => throw new InvalidOperationException("ToString failure");
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            throw new InvalidOperationException("ToString failure");
+        }
     }
 
     /// <summary>
@@ -291,10 +306,9 @@ namespace RadTadDev.Logger.Tests
         private static readonly TimeSpan ThreadTimeout = TimeSpan.FromSeconds(30);
 
         private readonly List<ISink> _added = new();
-        private ISink[] _savedSinks;
         private SynchronizationContext _savedContext;
-        private int _savedThreadId;
         private LogLevel _savedMinimumLevel;
+        private int _savedThreadId;
 
         /// <summary>
         /// Stands in for the main thread's synchronization context.
@@ -304,10 +318,10 @@ namespace RadTadDev.Logger.Tests
         /// <summary>
         /// The sinks that were registered before this test isolated the logger.
         /// </summary>
-        protected ISink[] OriginalSinks => _savedSinks;
+        protected ISink[] OriginalSinks { get; private set; }
 
         /// <summary>
-        /// Whether to replace the real main loop with <see cref="MainLoop"/>.
+        /// Whether to replace the real main loop with <see cref="MainLoop" />.
         /// </summary>
         protected virtual bool UsePumpContext => true;
 
@@ -319,7 +333,7 @@ namespace RadTadDev.Logger.Tests
         {
             RuntimeHelpers.RunClassConstructor(typeof(Log).TypeHandle);
 
-            _savedSinks = Internals.Sinks;
+            OriginalSinks = Internals.Sinks;
             _savedContext = Internals.MainContext;
             _savedThreadId = Internals.MainThreadId;
             _savedMinimumLevel = Log.MinimumLevel;
@@ -341,7 +355,7 @@ namespace RadTadDev.Logger.Tests
         [TearDown]
         public void RestoreLogger()
         {
-            foreach (ISink sink in _added)
+            foreach (var sink in _added)
             {
                 try
                 {
@@ -355,7 +369,7 @@ namespace RadTadDev.Logger.Tests
 
             _added.Clear();
 
-            Internals.Sinks = _savedSinks;
+            Internals.Sinks = OriginalSinks;
             Internals.MainContext = _savedContext;
             Internals.MainThreadId = _savedThreadId;
             Log.MinimumLevel = _savedMinimumLevel;
@@ -401,7 +415,7 @@ namespace RadTadDev.Logger.Tests
         }
 
         /// <summary>
-        /// Runs <paramref name="body"/> on several threads released together, failing the test if any
+        /// Runs <paramref name="body" /> on several threads released together, failing the test if any
         /// throws or hangs. Hung threads are background threads, so they cannot wedge the editor.
         /// </summary>
         /// <param name="count">How many threads to run.</param>
@@ -414,9 +428,9 @@ namespace RadTadDev.Logger.Tests
 
             using (var start = new Barrier(count))
             {
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
-                    int index = i;
+                    var index = i;
 
                     threads[i] = new Thread(() =>
                     {
@@ -429,14 +443,17 @@ namespace RadTadDev.Logger.Tests
                         {
                             failures.Enqueue(e);
                         }
-                    }) { IsBackground = true };
+                    })
+                    {
+                        IsBackground = true
+                    };
 
                     threads[i].Start();
                 }
 
-                DateTime deadline = DateTime.UtcNow + ThreadTimeout;
+                var deadline = DateTime.UtcNow + ThreadTimeout;
 
-                foreach (Thread thread in threads)
+                foreach (var thread in threads)
                 {
                     while (!thread.Join(1))
                     {

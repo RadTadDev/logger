@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -7,7 +8,7 @@ using UnityEngine.TestTools;
 namespace RadTadDev.Logger.Tests
 {
     /// <summary>
-    /// Registering sinks, and the <see cref="ThreadSafeSink"/> and <see cref="ConsoleSink"/> contracts.
+    /// Registering sinks, and the <see cref="ThreadSafeSink" /> and <see cref="ConsoleSink" /> contracts.
     /// </summary>
     public class SinkTests : LoggerFixture
     {
@@ -17,8 +18,8 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void AddSink_AllSinksReceiveMessages()
         {
-            RecordingSink first = Add(new RecordingSink());
-            RecordingSink second = Add(new RecordingSink());
+            var first = Add(new RecordingSink());
+            var second = Add(new RecordingSink());
 
             Log.Info("m");
 
@@ -32,7 +33,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void AddSink_Twice_RegistersOnce()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
             Log.AddSink(sink);
 
             Log.Info("m");
@@ -57,7 +58,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void AddSink_Null_Throws()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Assert.Throws<ArgumentNullException>(() => Log.AddSink(null));
 
@@ -70,7 +71,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void RemoveSink_StopsMessagesAndCloses()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.RemoveSink(sink);
             Log.Info("m");
@@ -87,7 +88,7 @@ namespace RadTadDev.Logger.Tests
         public void RemoveSink_KeepsTheRest([Values(0, 1, 2)] int index)
         {
             var sinks = Enumerable.Range(0, 3).Select(_ => Add(new RecordingSink())).ToList();
-            RecordingSink removed = sinks[index];
+            var removed = sinks[index];
 
             Log.RemoveSink(removed);
             sinks.RemoveAt(index);
@@ -123,7 +124,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void RemoveSink_Twice_ClosesOnce()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.RemoveSink(sink);
             Log.RemoveSink(sink);
@@ -137,7 +138,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void AddSink_AfterRemove_Throws()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
             Log.RemoveSink(sink);
 
             Assert.Throws<InvalidOperationException>(() => Log.AddSink(sink));
@@ -151,8 +152,8 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void RemoveSink_ThrowingClose_IsReported()
         {
-            ThrowingSink sink = Add(new ThrowingSink { ThrowOnClose = true });
-            LogAssert.Expect(LogType.Exception, new System.Text.RegularExpressions.Regex("close failure"));
+            var sink = Add(new ThrowingSink { ThrowOnClose = true });
+            LogAssert.Expect(LogType.Exception, new Regex("close failure"));
 
             Assert.DoesNotThrow(() => Log.RemoveSink(sink));
 
@@ -165,8 +166,8 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void ClearSinks_ClosesEverySinkAndLeavesNone()
         {
-            RecordingSink first = Add(new RecordingSink());
-            RecordingSink second = Add(new RecordingSink());
+            var first = Add(new RecordingSink());
+            var second = Add(new RecordingSink());
 
             Log.ClearSinks();
 
@@ -182,8 +183,8 @@ namespace RadTadDev.Logger.Tests
         public void ClearSinks_ThrowingClose_StillClosesLaterSinks()
         {
             Add(new ThrowingSink { ThrowOnClose = true });
-            RecordingSink after = Add(new RecordingSink());
-            LogAssert.Expect(LogType.Exception, new System.Text.RegularExpressions.Regex("close failure"));
+            var after = Add(new RecordingSink());
+            LogAssert.Expect(LogType.Exception, new Regex("close failure"));
 
             Assert.DoesNotThrow(Log.ClearSinks);
 
@@ -197,7 +198,7 @@ namespace RadTadDev.Logger.Tests
         public void ClearSinks_ThenAdd_ReceivesMessages()
         {
             Log.ClearSinks();
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.Info("m");
 
@@ -239,8 +240,8 @@ namespace RadTadDev.Logger.Tests
         public void Dispatch_ThrowingSink_DoesNotStopOthers()
         {
             Add(new ThrowingSink { ThrowOnWrite = true });
-            RecordingSink after = Add(new RecordingSink());
-            LogAssert.Expect(LogType.Exception, new System.Text.RegularExpressions.Regex("sink failure"));
+            var after = Add(new RecordingSink());
+            LogAssert.Expect(LogType.Exception, new Regex("sink failure"));
 
             Assert.DoesNotThrow(() => Log.Info("m"));
 
@@ -271,7 +272,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void ConsoleSink_InvalidLimit_Throws()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ConsoleSink(drainPerFrameLimit: 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ConsoleSink(0));
             Assert.Throws<ArgumentOutOfRangeException>(() => new ConsoleSink(queueLimit: 0));
         }
 
@@ -281,7 +282,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void ConsoleSink_UnknownLevel_Throws()
         {
-            ConsoleSink sink = Add(new ConsoleSink());
+            var sink = Add(new ConsoleSink());
 
             Assert.Throws<ArgumentOutOfRangeException>(() => sink.Write("m", (LogLevel)99));
         }

@@ -8,7 +8,7 @@ using UnityEngine.TestTools;
 namespace RadTadDev.Logger.Tests
 {
     /// <summary>
-    /// The public <see cref="Log"/> API: levels, filtering and message formatting.
+    /// The public <see cref="Log" /> API: levels, filtering and message formatting.
     /// </summary>
     public class LogApiTests : LoggerFixture
     {
@@ -20,9 +20,10 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void MinimumLevel_FiltersBelowAndKeepsAtOrAbove(
             [Values] LogLevel minimum,
-            [Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)] LogLevel level)
+            [Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)]
+            LogLevel level)
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
             Log.MinimumLevel = minimum;
 
             LogAt(level, "message");
@@ -35,9 +36,10 @@ namespace RadTadDev.Logger.Tests
         /// </summary>
         /// <param name="level">The level.</param>
         [Test]
-        public void EachApi_ReportsItsLevel([Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)] LogLevel level)
+        public void EachApi_ReportsItsLevel(
+            [Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)] LogLevel level)
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
             Log.MinimumLevel = LogLevel.Trace;
 
             LogAt(level, "message");
@@ -54,7 +56,8 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void IsEnabled_MatchesFilter(
             [Values] LogLevel minimum,
-            [Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)] LogLevel level)
+            [Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)]
+            LogLevel level)
         {
             Log.MinimumLevel = minimum;
 
@@ -79,7 +82,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Trace_IsFilteredAtTheFixtureDefaultOfInfo()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.Trace("hidden");
 
@@ -92,7 +95,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Message_IncludesLevelCallerFileAndText()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.Info("hello");
 
@@ -117,7 +120,7 @@ namespace RadTadDev.Logger.Tests
         [TestCase(null, "")]
         public void FilePath_IsReducedToFileName(string path, string expected)
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.Info("m", filePath: path);
 
@@ -130,7 +133,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void NullMessage_IsLogged()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.Info(null);
 
@@ -143,7 +146,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void ObjectMessage_UsesToString()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
             var value = new Vector3(1, 2, 3);
 
             Log.Info(value);
@@ -157,7 +160,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Exception_LogsAtErrorWithDetails()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.Exception(new InvalidOperationException("broken"));
 
@@ -171,7 +174,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Exception_IncludesStackTrace()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
             Exception thrown = null;
 
             try
@@ -194,7 +197,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Exception_PassesTheHighestFilter()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
             Log.MinimumLevel = LogLevel.Error;
 
             Log.Exception(new InvalidOperationException());
@@ -208,7 +211,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Exception_Null_IsLogged()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
 
             Log.Exception(null);
 
@@ -221,7 +224,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Debug_BypassesSinks()
         {
-            RecordingSink sink = Add(new RecordingSink());
+            var sink = Add(new RecordingSink());
             LogAssert.Expect(LogType.Log, new Regex(@"\[DEBUG\].*temporary"));
 
             Log.Debug("temporary");
@@ -273,7 +276,7 @@ namespace RadTadDev.Logger.Tests
         [TestCase(nameof(Log.Debug))]
         public void PublicLoggingMethods_HideInCallstack(string method)
         {
-            MethodInfo info = typeof(Log).GetMethod(method, BindingFlags.Public | BindingFlags.Static);
+            var info = typeof(Log).GetMethod(method, BindingFlags.Public | BindingFlags.Static);
 
             Assert.That(info.GetCustomAttribute<HideInCallstackAttribute>(), Is.Not.Null);
         }
@@ -284,7 +287,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void PrivateDispatch_HidesInCallstack()
         {
-            MethodInfo info = typeof(Log).GetMethod("Dispatch", BindingFlags.NonPublic | BindingFlags.Static);
+            var info = typeof(Log).GetMethod("Dispatch", BindingFlags.NonPublic | BindingFlags.Static);
 
             Assert.That(info.GetCustomAttribute<HideInCallstackAttribute>(), Is.Not.Null);
         }

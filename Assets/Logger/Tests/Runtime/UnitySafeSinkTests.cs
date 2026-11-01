@@ -20,7 +20,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void MainThreadWrite_IsDeliveredSynchronously()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             Log.Info("m");
 
@@ -34,7 +34,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void WorkerWrite_WaitsForMainLoop()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ => Log.Info("m"));
 
@@ -51,7 +51,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void WorkerWrite_IsDeliveredOnMainThread()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(4, _ => Log.Info("m"));
             MainLoop.Pump();
@@ -65,11 +65,11 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void WorkerWrites_KeepOrder()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ =>
             {
-                for (int i = 0; i < 100; i++)
+                for (var i = 0; i < 100; i++)
                 {
                     Log.Info(i);
                 }
@@ -86,7 +86,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void MainThreadWrite_FlushesQueuedWorkerWritesFirst()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ => Log.Info("worker"));
             Log.Info("main");
@@ -105,7 +105,7 @@ namespace RadTadDev.Logger.Tests
 
             RunThreads(4, _ =>
             {
-                for (int i = 0; i < 100; i++)
+                for (var i = 0; i < 100; i++)
                 {
                     Log.Info("m");
                 }
@@ -120,9 +120,9 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void DrainedSink_SchedulesAgain()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
-            for (int i = 1; i <= 3; i++)
+            for (var i = 1; i <= 3; i++)
             {
                 RunThreads(1, _ => Log.Info("m"));
                 MainLoop.Pump();
@@ -138,8 +138,8 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void WorkerWrite_DuringDrain_IsNotLost()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
-            bool logged = false;
+            var sink = Add(new RecordingUnitySink());
+            var logged = false;
 
             sink.AfterWrite = _ =>
             {
@@ -163,8 +163,8 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void ReentrantLog_FromWrite_IsDelivered()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
-            bool logged = false;
+            var sink = Add(new RecordingUnitySink());
+            var logged = false;
 
             sink.AfterWrite = _ =>
             {
@@ -186,7 +186,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Close_OnMainThread_FlushesQueue()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ => Log.Info("m"));
             Log.RemoveSink(sink);
@@ -200,11 +200,11 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void PendingDrain_AfterClose_IsHarmless()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ => Log.Info("m"));
             sink.Close();
-            int delivered = sink.Messages.Count;
+            var delivered = sink.Messages.Count;
             MainLoop.Pump();
 
             Assert.That(sink.Messages, Has.Count.EqualTo(delivered));
@@ -217,11 +217,11 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Close_OnWorkerThread_DeliversAcceptedMessages()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ =>
             {
-                for (int i = 0; i < 10; i++)
+                for (var i = 0; i < 10; i++)
                 {
                     Log.Info("m");
                 }
@@ -239,7 +239,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Close_OnWorkerThread_RunsCleanupOnMainThreadAfterDelivery()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ =>
             {
@@ -262,7 +262,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Close_OnWorkerThread_RefusesNewWrites()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
             RunThreads(1, _ => sink.Close());
             sink.Write("late", LogLevel.Info);
@@ -278,11 +278,11 @@ namespace RadTadDev.Logger.Tests
         public void DrainLimit_DoesNotApplyWhenClosingOnWorkerThread()
         {
             LogAssert.ignoreFailingMessages = true;
-            RecordingUnitySink sink = Add(new RecordingUnitySink(drainPerFrameLimit: 2));
+            var sink = Add(new RecordingUnitySink(2));
 
             RunThreads(1, _ =>
             {
-                for (int i = 0; i < 10; i++)
+                for (var i = 0; i < 10; i++)
                 {
                     Log.Info("m");
                 }
@@ -301,12 +301,12 @@ namespace RadTadDev.Logger.Tests
         public void Drain_ThrowingWrite_DeliversTheRest()
         {
             LogAssert.ignoreFailingMessages = true;
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
             sink.FailOnAttempt = 1;
 
             RunThreads(1, _ =>
             {
-                for (int i = 0; i < 5; i++)
+                for (var i = 0; i < 5; i++)
                 {
                     Log.Info("m");
                 }
@@ -323,7 +323,7 @@ namespace RadTadDev.Logger.Tests
         public void MainThreadWrite_FailedFlush_StillDeliversCurrentMessage()
         {
             LogAssert.ignoreFailingMessages = true;
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
             sink.FailOnAttempt = 0;
 
             RunThreads(1, _ => Log.Info("worker"));
@@ -341,25 +341,25 @@ namespace RadTadDev.Logger.Tests
             const int messages = 10000;
             const long slowWriteTicksPerMicrosecond = 50;
 
-            RecordingUnitySink sink = Add(new RecordingUnitySink(1000, messages));
+            var sink = Add(new RecordingUnitySink(1000, messages));
             LogAssert.Expect(LogType.Warning, new Regex("drain limit"));
 
             sink.AfterWrite = _ =>
             {
-                long end = Stopwatch.GetTimestamp() + (Stopwatch.Frequency * slowWriteTicksPerMicrosecond / 1000000);
+                var end = Stopwatch.GetTimestamp() + Stopwatch.Frequency * slowWriteTicksPerMicrosecond / 1000000;
 
                 while (Stopwatch.GetTimestamp() < end) { }
             };
 
             RunThreads(1, _ =>
             {
-                for (int i = 0; i < messages; i++)
+                for (var i = 0; i < messages; i++)
                 {
                     Log.Info("m");
                 }
             });
 
-            Stopwatch frame = Stopwatch.StartNew();
+            var frame = Stopwatch.StartNew();
             MainLoop.Pump();
             frame.Stop();
 
@@ -372,7 +372,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void Drain_ThrowingWrite_IsReported()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
             sink.FailOnAttempt = 0;
             LogAssert.Expect(LogType.Exception, new Regex("sink failure"));
 
@@ -389,7 +389,7 @@ namespace RadTadDev.Logger.Tests
         public void Close_ThrowingFlush_StillRunsCleanup()
         {
             LogAssert.ignoreFailingMessages = true;
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
             sink.FailOnAttempt = 0;
 
             RunThreads(1, _ => Log.Info("m"));
@@ -432,7 +432,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void DrainLimit_SpreadsBacklogAcrossFramesInOrder()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(drainPerFrameLimit: 4));
+            var sink = Add(new RecordingUnitySink(4));
             LogAssert.Expect(LogType.Warning, new Regex("drain limit of 4"));
             LogBurst(10);
 
@@ -452,11 +452,11 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void DrainLimit_WarnsOncePerBacklog()
         {
-            Add(new RecordingUnitySink(drainPerFrameLimit: 1));
+            Add(new RecordingUnitySink(1));
             LogAssert.Expect(LogType.Warning, new Regex("drain limit of 1"));
             LogBurst(5);
 
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 MainLoop.Pump();
             }
@@ -470,7 +470,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void DrainLimit_ExactlyMet_DoesNotWarn()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(drainPerFrameLimit: 5));
+            var sink = Add(new RecordingUnitySink(5));
             LogBurst(5);
 
             MainLoop.Pump();
@@ -485,13 +485,13 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void DrainLimit_MainThreadWrite_KeepsOrderBehindBacklog()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(drainPerFrameLimit: 2));
+            var sink = Add(new RecordingUnitySink(2));
             LogAssert.Expect(LogType.Warning, new Regex("drain limit"));
             LogBurst(5);
 
             Log.Info(5);
 
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 MainLoop.Pump();
             }
@@ -505,11 +505,11 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void DrainLimit_AppliesToMainThreadFlushes()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(drainPerFrameLimit: 2));
+            var sink = Add(new RecordingUnitySink(2));
             LogAssert.Expect(LogType.Warning, new Regex("drain limit"));
             LogBurst(10);
 
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 Log.Info("main");
             }
@@ -523,7 +523,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void DrainLimit_DoesNotApplyWhenClosing()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(drainPerFrameLimit: 2));
+            var sink = Add(new RecordingUnitySink(2));
             LogBurst(10);
 
             Log.RemoveSink(sink);
@@ -537,7 +537,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void QueueLimit_DropsNewest()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(queueLimit: 3));
+            var sink = Add(new RecordingUnitySink(queueLimit: 3));
             LogAssert.Expect(LogType.Warning, new Regex("queue limit of 3"));
             LogAssert.Expect(LogType.Warning, new Regex("dropped 7 logs"));
 
@@ -553,7 +553,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void QueueLimit_ExactlyMet_DoesNotWarn()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(queueLimit: 5));
+            var sink = Add(new RecordingUnitySink(queueLimit: 5));
 
             LogBurst(5);
             MainLoop.Pump();
@@ -568,9 +568,9 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void QueueLimit_RecoversAfterDrain()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(queueLimit: 2));
+            var sink = Add(new RecordingUnitySink(queueLimit: 2));
 
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 LogAssert.Expect(LogType.Warning, new Regex("queue limit of 2"));
                 LogAssert.Expect(LogType.Warning, new Regex("dropped 1 logs"));
@@ -590,13 +590,13 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void QueueLimit_HoldsUnderConcurrentWriters()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink(queueLimit: 100));
+            var sink = Add(new RecordingUnitySink(queueLimit: 100));
             LogAssert.Expect(LogType.Warning, new Regex("queue limit of 100"));
             LogAssert.Expect(LogType.Warning, new Regex("dropped 300 logs"));
 
             RunThreads(4, _ =>
             {
-                for (int i = 0; i < 100; i++)
+                for (var i = 0; i < 100; i++)
                 {
                     Log.Info("m");
                 }
@@ -606,14 +606,16 @@ namespace RadTadDev.Logger.Tests
             Assert.That(sink.Messages, Has.Count.EqualTo(100));
         }
 
-        private static string[] Expected(int count) =>
-            Enumerable.Range(0, count).Select(i => $"[Info] [UnitySafeSinkTests]: {i}").ToArray();
+        private static string[] Expected(int count)
+        {
+            return Enumerable.Range(0, count).Select(i => $"[Info] [UnitySafeSinkTests]: {i}").ToArray();
+        }
 
         private static void LogBurst(int count)
         {
             RunThreads(1, _ =>
             {
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
                     Log.Info(i);
                 }

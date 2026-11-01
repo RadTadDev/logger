@@ -13,20 +13,6 @@ namespace RadTadDev.Logger.Editor.Tests
     /// </summary>
     public class EditModeLoggingTests
     {
-        private sealed class CollectingSink : ThreadSafeSink
-        {
-            /// <summary>
-            /// Messages received.
-            /// </summary>
-            public List<string> Messages { get; } = new();
-
-            /// <inheritdoc/>
-            protected override void WriteSerial(string message, LogLevel level) => Messages.Add(message);
-
-            /// <inheritdoc/>
-            protected override void OnClosed() { }
-        }
-
         /// <summary>
         /// Editor scripts can log from the main thread (audit #2).
         /// </summary>
@@ -82,6 +68,23 @@ namespace RadTadDev.Logger.Editor.Tests
             LogAssert.Expect(LogType.Log, new Regex("edit debug"));
 
             Log.Debug("edit debug");
+        }
+
+        private sealed class CollectingSink : ThreadSafeSink
+        {
+            /// <summary>
+            /// Messages received.
+            /// </summary>
+            public List<string> Messages { get; } = new();
+
+            /// <inheritdoc />
+            protected override void WriteSerial(string message, LogLevel level)
+            {
+                Messages.Add(message);
+            }
+
+            /// <inheritdoc />
+            protected override void OnClosed() { }
         }
     }
 }

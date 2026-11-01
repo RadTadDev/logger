@@ -13,7 +13,7 @@ namespace RadTadDev.Logger.Tests
     {
         private const int MaxFrames = 300;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override bool UsePumpContext => false;
 
         /// <summary>
@@ -23,10 +23,10 @@ namespace RadTadDev.Logger.Tests
         [UnityTest]
         public IEnumerator WorkerLog_ArrivesOnALaterFrame()
         {
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
-            Task task = Task.Run(() => Log.Info("m"));
+            var sink = Add(new RecordingUnitySink());
+            var task = Task.Run(() => Log.Info("m"));
 
-            for (int i = 0; i < MaxFrames && (!task.IsCompleted || sink.Messages.Count == 0); i++)
+            for (var i = 0; i < MaxFrames && (!task.IsCompleted || sink.Messages.Count == 0); i++)
             {
                 yield return null;
             }
@@ -44,9 +44,9 @@ namespace RadTadDev.Logger.Tests
             Add(new ConsoleSink());
             LogAssert.Expect(LogType.Warning, "[Warn] [MainLoopIntegrationTests]: from worker");
 
-            Task task = Task.Run(() => Log.Warn("from worker"));
+            var task = Task.Run(() => Log.Warn("from worker"));
 
-            for (int i = 0; i < 10 || !task.IsCompleted; i++)
+            for (var i = 0; i < 10 || !task.IsCompleted; i++)
             {
                 yield return null;
             }
@@ -62,15 +62,15 @@ namespace RadTadDev.Logger.Tests
             const int batches = 5;
             const int perBatch = 100;
 
-            RecordingUnitySink sink = Add(new RecordingUnitySink());
+            var sink = Add(new RecordingUnitySink());
 
-            for (int batch = 0; batch < batches; batch++)
+            for (var batch = 0; batch < batches; batch++)
             {
                 Parallel.For(0, perBatch, i => Log.Info(i));
                 yield return null;
             }
 
-            for (int i = 0; i < MaxFrames && sink.Messages.Count < batches * perBatch; i++)
+            for (var i = 0; i < MaxFrames && sink.Messages.Count < batches * perBatch; i++)
             {
                 yield return null;
             }

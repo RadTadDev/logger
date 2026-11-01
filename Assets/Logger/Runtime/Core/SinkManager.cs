@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using UnityEditor;
 using UnityEngine;
 
 namespace RadTadDev.Logger
@@ -91,7 +92,10 @@ namespace RadTadDev.Logger
         /// <summary>
         /// Removes and closes every sink.
         /// </summary>
-        public static void ClearSinks() => ReplaceSinks(Array.Empty<ISink>());
+        public static void ClearSinks()
+        {
+            ReplaceSinks(Array.Empty<ISink>());
+        }
 
         /// <summary>
         /// Dispatches a message to all registered sinks.
@@ -128,16 +132,19 @@ namespace RadTadDev.Logger
         }
 
 #if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
+        [InitializeOnLoadMethod]
         private static void ResetBeforeAssemblyReload()
         {
-            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -= Reset;
-            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += Reset;
+            AssemblyReloadEvents.beforeAssemblyReload -= Reset;
+            AssemblyReloadEvents.beforeAssemblyReload += Reset;
         }
 #endif
 
         // Replaced rather than emptied: nothing reruns to restore it with domain reload off.
-        private static void Reset() => ReplaceSinks(new ISink[] { new ConsoleSink() });
+        private static void Reset()
+        {
+            ReplaceSinks(new ISink[] { new ConsoleSink() });
+        }
 
         private static void ReplaceSinks(ISink[] next)
         {

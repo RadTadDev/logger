@@ -8,15 +8,15 @@ namespace RadTadDev.Logger
     /// </summary>
     public abstract class ThreadSafeSink : ISink
     {
-        private bool _closed;
         private readonly object _lock = new();
+        private bool _closed;
 
         /// <summary>
         /// Whether this sink has been closed. Closed sinks never reopen.
         /// </summary>
         internal bool IsClosed => Volatile.Read(ref _closed);
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         [HideInCallstack]
         public void Write(string message, LogLevel level)
         {
@@ -29,7 +29,7 @@ namespace RadTadDev.Logger
             }
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public void Close()
         {
             lock (_lock)
