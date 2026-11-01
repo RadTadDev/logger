@@ -23,6 +23,11 @@ namespace RadTadDev.Logger
         /// <summary>
         /// Errors.
         /// </summary>
-        Error
+        Error,
+
+        /// <summary>
+        /// Logs nothing. Only meaningful for <see cref="Log.MinimumLevel"/>; no message has this level.
+        /// </summary>
+        None
     }
 }

@@ -12,6 +12,16 @@ namespace RadTadDev.Logger
     /// </summary>
     public abstract class UnitySafeSink : ThreadSafeSink
     {
+        /// <summary>
+        /// The default maximum number of logs to print in a single frame.
+        /// </summary>
+        protected const int DefaultDrainPerFrameLimit = 1000;
+
+        /// <summary>
+        /// The default maximum number of logs to queue at any given time.
+        /// </summary>
+        protected const int DefaultQueueLimit = 10000;
+
         private readonly struct Entry
         {
             /// <summary>
@@ -69,7 +79,7 @@ namespace RadTadDev.Logger
         /// </summary>
         /// <param name="drainPerFrameLimit">Maximum number of logs to print in a single frame.</param>
         /// <param name="queueLimit">The maximum number of logs to queue at any given time.</param>
-        protected UnitySafeSink(int drainPerFrameLimit = 1000, int queueLimit = 10000)
+        protected UnitySafeSink(int drainPerFrameLimit = DefaultDrainPerFrameLimit, int queueLimit = DefaultQueueLimit)
         {
             if (drainPerFrameLimit <= 0)
             {
@@ -92,6 +102,10 @@ namespace RadTadDev.Logger
             _mainContext = SynchronizationContext.Current;
             _mainThreadId = Thread.CurrentThread.ManagedThreadId;
         }
+
+        // Worker logs never drain without a context, so capture again once startup is further along.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RecaptureMainThread() => CaptureMainThread();
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]
@@ -169,6 +183,7 @@ namespace RadTadDev.Logger
         /// <summary>
         /// Called when this sink is closed, on the main thread unless no main thread has been captured.
         /// </summary>
+        /// <remarks>This may run with the sink's write lock held, so never wait on another thread here.</remarks>
         protected virtual void OnSinkClosed() { }
 
         [HideInCallstack]
@@ -234,7 +249,8 @@ namespace RadTadDev.Logger
                 }
             }
 
-            if (!_queue.IsEmpty)
+            // With budget left a non-empty queue is a racing writer, which schedules its own drain.
+            if (_drainBudget == 0 && !_queue.IsEmpty)
             {
                 if (!_throttled)
                 {

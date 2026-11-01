@@ -2,7 +2,7 @@
     "name": "com.radtaddev.logger",
     "version": "0.1.0",
     "displayName": "Logger",
-    "description": "",
+    "description": "A practical thread safe logger with pluggable sinks.",
     "unity": "6000.4",
     "author": {
         "name": "Tad DiDio",
@@ -12,12 +12,5 @@
     "changelogUrl": "https://github.com/RadTadDev/logger/blob/main/Assets/Logger/CHANGELOG.md",
     "licensesUrl": "https://github.com/RadTadDev/logger/blob/main/Assets/Logger/LICENSE.md",
     "dependencies": {},
-    "samples": [
-        {
-            "displayName": "Example",
-            "description": "Minimal usage example.",
-            "path": "Samples~/Example"
-        }
-    ],
     "license": "MIT"
 }

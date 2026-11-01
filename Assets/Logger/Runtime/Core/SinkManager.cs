@@ -85,8 +85,13 @@ namespace RadTadDev.Logger
                 Volatile.Write(ref _sinks, next);
             }
 
-            sink.Close();
+            CloseSafely(sink);
         }
+
+        /// <summary>
+        /// Removes and closes every sink.
+        /// </summary>
+        public static void ClearSinks() => ReplaceSinks(Array.Empty<ISink>());
 
         /// <summary>
         /// Dispatches a message to all registered sinks.
@@ -115,32 +120,50 @@ namespace RadTadDev.Logger
         {
             Reset();
 
+            // Domain reload off keeps statics, so this matches what a reload would have done.
+            Log.MinimumLevel = Log.DefaultMinimumLevel;
+
             Application.quitting -= Reset;
             Application.quitting += Reset;
         }
 
-        private static void Reset()
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void ResetBeforeAssemblyReload()
+        {
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -= Reset;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += Reset;
+        }
+#endif
+
+        // Replaced rather than emptied: nothing reruns to restore it with domain reload off.
+        private static void Reset() => ReplaceSinks(new ISink[] { new ConsoleSink() });
+
+        private static void ReplaceSinks(ISink[] next)
         {
             ISink[] old;
 
             lock (Lock)
             {
                 old = _sinks;
-
-                // Replaced rather than emptied: nothing reruns to restore it with domain reload off.
-                Volatile.Write(ref _sinks, new ISink[] { new ConsoleSink() });
+                Volatile.Write(ref _sinks, next);
             }
 
             foreach (var sink in old)
             {
-                try
-                {
-                    sink.Close();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
+                CloseSafely(sink);
+            }
+        }
+
+        private static void CloseSafely(ISink sink)
+        {
+            try
+            {
+                sink.Close();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
             }
         }
     }

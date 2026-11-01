@@ -284,7 +284,7 @@ namespace RadTadDev.Logger.Tests
         [Test]
         public void MinimumLevel_ChangingUnderLoad_IsSafe()
         {
-            var levels = (LogLevel[])Enum.GetValues(typeof(LogLevel));
+            var levels = new[] { LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error };
             RecordingSink sink = Add(new RecordingSink());
 
             RunThreads(Threads, thread =>

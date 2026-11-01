@@ -18,7 +18,9 @@ namespace RadTadDev.Logger.Tests
         /// <param name="minimum">The minimum level.</param>
         /// <param name="level">The message's level.</param>
         [Test]
-        public void MinimumLevel_FiltersBelowAndKeepsAtOrAbove([Values] LogLevel minimum, [Values] LogLevel level)
+        public void MinimumLevel_FiltersBelowAndKeepsAtOrAbove(
+            [Values] LogLevel minimum,
+            [Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)] LogLevel level)
         {
             RecordingSink sink = Add(new RecordingSink());
             Log.MinimumLevel = minimum;
@@ -33,7 +35,7 @@ namespace RadTadDev.Logger.Tests
         /// </summary>
         /// <param name="level">The level.</param>
         [Test]
-        public void EachApi_ReportsItsLevel([Values] LogLevel level)
+        public void EachApi_ReportsItsLevel([Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)] LogLevel level)
         {
             RecordingSink sink = Add(new RecordingSink());
             Log.MinimumLevel = LogLevel.Trace;
@@ -42,6 +44,33 @@ namespace RadTadDev.Logger.Tests
 
             Assert.That(sink.Levels, Is.EqualTo(new[] { level }));
             Assert.That(sink.Messages[0], Does.StartWith($"[{level}] "));
+        }
+
+        /// <summary>
+        /// IsEnabled agrees with what the filter does.
+        /// </summary>
+        /// <param name="minimum">The minimum level.</param>
+        /// <param name="level">The level asked about.</param>
+        [Test]
+        public void IsEnabled_MatchesFilter(
+            [Values] LogLevel minimum,
+            [Values(LogLevel.Trace, LogLevel.Info, LogLevel.Warn, LogLevel.Error)] LogLevel level)
+        {
+            Log.MinimumLevel = minimum;
+
+            Assert.That(Log.IsEnabled(level), Is.EqualTo(level >= minimum));
+        }
+
+        /// <summary>
+        /// None is a filter setting, never an enabled message level.
+        /// </summary>
+        /// <param name="minimum">The minimum level.</param>
+        [Test]
+        public void IsEnabled_None_IsAlwaysFalse([Values] LogLevel minimum)
+        {
+            Log.MinimumLevel = minimum;
+
+            Assert.That(Log.IsEnabled(LogLevel.None), Is.False);
         }
 
         /// <summary>
@@ -210,6 +239,17 @@ namespace RadTadDev.Logger.Tests
             LogAssert.Expect(LogType.Log, new Regex("still visible"));
 
             Log.Debug("still visible");
+        }
+
+        /// <summary>
+        /// Debug is a logging call too, so a throwing ToString stays out of the caller.
+        /// </summary>
+        [Test]
+        public void Debug_ThrowingToString_DoesNotReachCaller()
+        {
+            LogAssert.Expect(LogType.Log, new Regex("ToString failure"));
+
+            Assert.DoesNotThrow(() => Log.Debug(new ThrowingToString()));
         }
 
         /// <summary>

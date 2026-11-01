@@ -5,21 +5,25 @@ using UnityEngine;
 namespace RadTadDev.Logger
 {
     /// <summary>
-    /// Creates logger objects.
+    /// The entry point for writing logs and managing sinks.
     /// </summary>
     public static class Log
     {
+        internal const LogLevel DefaultMinimumLevel = LogLevel.Info;
+
+        private static readonly char[] PathSeparators = { '/', '\\' };
+
         /// <summary>
-        /// The minimum level of message to log.
+        /// The minimum level of message to log. Set to <see cref="LogLevel.None"/> to log nothing.
         /// </summary>
-        /// <remarks>Defaults to <see cref="LogLevel.Info"/></remarks>
-        public static LogLevel MinimumLevel = LogLevel.Info;
+        /// <remarks>Defaults to <see cref="LogLevel.Info"/>, and returns to it whenever play mode starts.</remarks>
+        public static volatile LogLevel MinimumLevel = DefaultMinimumLevel;
 
         /// <summary>
         /// Logs verbose information.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <remarks>Note: It is intended that only the <see cref="message"/> parameter is used in this API.</remarks>
+        /// <remarks>Note: It is intended that only the <paramref name="message"/> parameter is used in this API.</remarks>
         [HideInCallstack]
         public static void Trace
         (
@@ -32,7 +36,7 @@ namespace RadTadDev.Logger
         /// Logs information.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <remarks>Note: It is intended that only the <see cref="message"/> parameter is used in this API.</remarks>
+        /// <remarks>Note: It is intended that only the <paramref name="message"/> parameter is used in this API.</remarks>
         [HideInCallstack]
         public static void Info
         (
@@ -45,7 +49,7 @@ namespace RadTadDev.Logger
         /// Logs a warning.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <remarks>Note: It is intended that only the <see cref="message"/> parameter is used in this API.</remarks>
+        /// <remarks>Note: It is intended that only the <paramref name="message"/> parameter is used in this API.</remarks>
         [HideInCallstack]
         public static void Warn(
             object message,
@@ -57,7 +61,7 @@ namespace RadTadDev.Logger
         /// Logs an error.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <remarks>Note: It is intended that only the <see cref="message"/> parameter is used in this API.</remarks>
+        /// <remarks>Note: It is intended that only the <paramref name="message"/> parameter is used in this API.</remarks>
         [HideInCallstack]
         public static void Error(
             object message,
@@ -69,7 +73,7 @@ namespace RadTadDev.Logger
         /// Logs an exception.
         /// </summary>
         /// <param name="exception">The exception.</param>
-        /// <remarks>Note: It is intended that only the <see cref="exception"/> parameter is used in this API.</remarks>
+        /// <remarks>Note: It is intended that only the <paramref name="exception"/> parameter is used in this API.</remarks>
         [HideInCallstack]
         public static void Exception
         (
@@ -85,8 +89,15 @@ namespace RadTadDev.Logger
         [HideInCallstack]
         public static void Debug(object message)
         {
-            UnityEngine.Debug.Log($"<color=#2E9BFF>======= [DEBUG]:</color> {message}");
+            UnityEngine.Debug.Log($"<color=#2E9BFF>======= [DEBUG]:</color> {Format(message)}");
         }
+
+        /// <summary>
+        /// Whether a message at this level would be logged. Use it to skip building expensive messages.
+        /// </summary>
+        /// <param name="level">The level.</param>
+        /// <returns>True if messages at <paramref name="level"/> reach the sinks.</returns>
+        public static bool IsEnabled(LogLevel level) => level != LogLevel.None && level >= MinimumLevel;
 
         /// <summary>
         /// Adds a sink to send every message to.
@@ -102,14 +113,22 @@ namespace RadTadDev.Logger
         /// <param name="sink">The sink to remove.</param>
         /// <remarks>
         /// Sinks are cleaned up automatically both when the player application enters and exits, thus
-        /// there is no need to call this on application teardown.
+        /// there is no need to call this on application teardown. That cleanup runs on
+        /// <see cref="Application.quitting"/>, so logs from <c>OnDisable</c> and <c>OnDestroy</c> during
+        /// quit reach only a fresh <see cref="ConsoleSink"/>.
         /// </remarks>
         public static void RemoveSink(ISink sink) => SinkManager.RemoveSink(sink);
+
+        /// <summary>
+        /// Removes and closes every sink, including the default <see cref="ConsoleSink"/>. Use this
+        /// before adding sinks to replace the default rather than add to it.
+        /// </summary>
+        public static void ClearSinks() => SinkManager.ClearSinks();
 
         [HideInCallstack]
         private static void Dispatch(object message, string filePath, LogLevel level)
         {
-            if (level >= MinimumLevel)
+            if (IsEnabled(level))
             {
                 SinkManager.Dispatch($"[{level}] [{GetFileName(filePath)}]: {Format(message)}", level);
             }
@@ -136,7 +155,7 @@ namespace RadTadDev.Logger
             }
 
             // -1 + 1 = 0 if no separator
-            int start = filePath.LastIndexOfAny(new[] { '/', '\\' }) + 1;
+            int start = filePath.LastIndexOfAny(PathSeparators) + 1;
             int end = filePath.Length;
 
             int dot = filePath.LastIndexOf('.');

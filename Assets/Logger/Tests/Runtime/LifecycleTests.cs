@@ -101,6 +101,32 @@ namespace RadTadDev.Logger.Tests
         }
 
         /// <summary>
+        /// The filter starts each session at its default, with or without domain reload.
+        /// </summary>
+        [Test]
+        public void ResetOnPlay_RestoresDefaultMinimumLevel()
+        {
+            Log.MinimumLevel = LogLevel.Error;
+
+            Internals.ResetOnPlay();
+
+            Assert.That(Log.MinimumLevel, Is.EqualTo(LogLevel.Info));
+        }
+
+        /// <summary>
+        /// Quit does not touch the filter, so teardown logs are judged by the session's level.
+        /// </summary>
+        [Test]
+        public void Reset_KeepsMinimumLevel()
+        {
+            Log.MinimumLevel = LogLevel.Error;
+
+            Internals.Reset();
+
+            Assert.That(Log.MinimumLevel, Is.EqualTo(LogLevel.Error));
+        }
+
+        /// <summary>
         /// Logging before play starts, such as from [InitializeOnLoad], cannot kill the session (audit #3).
         /// </summary>
         [Test]
